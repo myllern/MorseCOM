@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">My Application</string>
+    <string name="transmitter">Transmitter</string>
+    <string name="receiver">Receiver</string>
+    <string name="send_message">Send Message</string>
+    <string name="transmitter_string">Transmitter</string>
+    <string name="write_a_message_to_send">Write a message to send...</string>
+    <string name="take_one">Take one!!</string>
+</resources>
