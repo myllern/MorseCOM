@@ -68,18 +68,7 @@ public class TransmitterActivity extends AppCompatActivity {
             }
         }
         List<String> encodedSentenceArray  = encoder.encode(messageBox.getText().toString());
-
-        while(true){
-            flashLightOn();
-            Thread.sleep(1000);
-            flashLightOff();
-            flashLightOn();
-            Thread.sleep(100);
-            flashLightOff();
-            Thread.sleep(1000);
-
-        }
-
+        flasher.transmit(encodedSentenceArray);
 
 
 
@@ -87,34 +76,4 @@ public class TransmitterActivity extends AppCompatActivity {
     }
 
 
-
-
-
-
-    // bad practice
-    private void flashLightOn(){
-        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        try{
-            assert cameraManager != null;
-            String cameraId = cameraManager.getCameraIdList()[0];
-            cameraManager.setTorchMode(cameraId, true);
-            Toast.makeText(TransmitterActivity.this, "FlashLight is ON", Toast.LENGTH_SHORT).show();
-        }
-        catch(CameraAccessException e){
-            Log.e("Camera Problem", "Cannot turn on camera flashlight");
-        }
-    }
-
-    private void flashLightOff(){
-        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        try{
-            assert cameraManager != null;
-            String cameraId = cameraManager.getCameraIdList()[0];
-            cameraManager.setTorchMode(cameraId, false);
-            Toast.makeText(TransmitterActivity.this, "FlashLight is OFF", Toast.LENGTH_SHORT).show();
-        }
-        catch(CameraAccessException e){
-            Log.e("Camera Problem", "Cannot turn off camera flashlight");
-        }
-    }
 }
