@@ -1,8 +1,9 @@
-package com.example.myapplication;
+package com.example.morescom;
 
-import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Button;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class ReceiverActivity extends AppCompatActivity {
 
