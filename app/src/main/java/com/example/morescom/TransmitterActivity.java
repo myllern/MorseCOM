@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransmitterActivity extends AppCompatActivity {
+    int unitTime = 200;
     Button sendButton;
     EditText messageBox;
     CameraManager cameraManager;
@@ -48,7 +49,7 @@ public class TransmitterActivity extends AppCompatActivity {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
-        flasher = new Flasher(cameraManager,cameraId);
+        flasher = new Flasher(cameraManager,cameraId, unitTime);
     }
 
     public void getMessageInput() throws InterruptedException {
@@ -67,13 +68,6 @@ public class TransmitterActivity extends AppCompatActivity {
                 Toast.makeText(TransmitterActivity.this, "This device has no camera", Toast.LENGTH_SHORT).show();
             }
         }
-        List<String> encodedSentenceArray  = encoder.encode(messageBox.getText().toString());
-        flasher.transmit(encodedSentenceArray);
-
-
-
-
+        flasher.transmit(encoder.encode(messageBox.getText().toString()));
     }
-
-
 }

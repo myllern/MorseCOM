@@ -8,19 +8,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class  Flasher{
-    CameraManager CM;
-    String cID;
-    int dotDealy = 1000;
-    int dashDelay = dotDealy * 3;
-    int wordEndDelay = dotDealy * 6;
+    private CameraManager CM;
+    private String cID;
+    private int unitTime;
+    private int dotDealy = 1000;
+    private int dashDelay = dotDealy * 3;
+    private int wordEndDelay = dotDealy * 6;
 
-
-
-    public Flasher(CameraManager CM, String cID){
+    public Flasher(CameraManager CM, String cID, int unitTime){
+        this.unitTime = unitTime;
         this.CM = CM;
         this.cID = cID;
     }
-
     public void transmit(List<String> BlinkArray) throws InterruptedException {
 
         for (String word : BlinkArray
@@ -40,18 +39,9 @@ public class  Flasher{
                 }
             }
             Thread.sleep(wordEndDelay);
-
         }
-
-
     }
 
-
-
-
-
-
-    // bad practice
     private void flashLightOn(){
         try{
             assert CM != null;
