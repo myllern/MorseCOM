@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransmitterActivity extends AppCompatActivity {
-    int unitTime = 200;
+    int unitTime = 300;
     Button sendButton;
     EditText messageBox;
     CameraManager cameraManager;

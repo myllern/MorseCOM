@@ -10,13 +10,14 @@ import java.util.List;
 public class  Flasher{
     private CameraManager CM;
     private String cID;
-    private int unitTime;
-    private int dotDealy = 1000;
+
+    private int dotDealy;
     private int dashDelay = dotDealy * 3;
     private int wordEndDelay = dotDealy * 6;
 
     public Flasher(CameraManager CM, String cID, int unitTime){
-        this.unitTime = unitTime;
+
+        this.dotDealy = unitTime;
         this.CM = CM;
         this.cID = cID;
     }

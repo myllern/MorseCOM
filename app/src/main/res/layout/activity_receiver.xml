@@ -1,47 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="horizontal">
-
-
+    xmlns:ap="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/ll"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     <FrameLayout
         android:id="@+id/camera_preview"
-        android:layout_width="406dp"
-        android:layout_height="374dp"
-        android:layout_marginTop="76dp"
-        android:layout_weight="0"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        />
 
-        <ImageView
-            android:id="@+id/scoope_ID"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="center"
-            android:layout_weight="1"
-            android:visibility="visible" />
-    </FrameLayout>
-
-    <Button
-        android:id="@+id/button_capture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="140dp"
-        android:text="Capture"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/camera_preview"
-        app:layout_constraintVertical_bias="0.774" />
+    <com.jjoe64.graphview.GraphView
+        android:layout_width="500dp"
+        android:layout_gravity="bottom"
+        android:layout_height="400dp"
+        android:id="@+id/graph" />
 
 
-</androidx.constraintlayout.widget.ConstraintLayout>
 
+
+
+
+</LinearLayout>
