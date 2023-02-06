@@ -3,18 +3,17 @@ package com.example.morescom;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Paint;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraManager;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -37,6 +36,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     GraphView graph;
     LineGraphSeries<DataPoint> seriesG, seriesB, seriesR;
     long mesureCounter;
+    Bitmap oldBitmap;
+
+    MovingAvrageFilter MAF;
 
     private SurfaceHolder mHolder;
     private Camera mCamera;
@@ -55,14 +57,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public CameraPreview(Context context, Camera camera, ImageView mCameraPreview, LinearLayout layout, GraphView graph) {
         super(context);
         this.graph = graph;
-        counter = 0;
-        mesureCounter = 0;
-
         mCamera = camera;
         params = mCamera.getParameters();
         imageFormat = params.getPreviewFormat();
         //Make sure that the preview size actually exists, and set it to our values
-
         for (Camera.Size previewSize : mCamera.getParameters().getSupportedPreviewSizes()) {
             if (previewSize.width == 640 && previewSize.height == 480) {
                 params.setPreviewSize(previewSize.width, previewSize.height);
@@ -79,21 +77,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         layout.addView(myCameraPreview);
 
-        seriesR = new LineGraphSeries<>(new DataPoint[]{
-                new DataPoint(0, 0),
-        });
+        seriesR = new LineGraphSeries<>(new DataPoint[]{new DataPoint(0, 0),});
         seriesR.setColor(Color.RED);
         graph.addSeries(seriesR);
 
-        seriesG = new LineGraphSeries<>(new DataPoint[]{
-                new DataPoint(0, 0),
-        });
+        seriesG = new LineGraphSeries<>(new DataPoint[]{new DataPoint(0, 0),});
         seriesG.setColor(Color.GREEN);
         graph.addSeries(seriesG);
 
-        seriesB = new LineGraphSeries<>(new DataPoint[]{
-                new DataPoint(0, 0),
-        });
+        seriesB = new LineGraphSeries<>(new DataPoint[]{new DataPoint(0, 0),});
         seriesB.setColor(Color.BLUE);
         graph.addSeries(seriesB);
 
@@ -160,8 +152,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             bytes = rotateYUV420Degree90(bytes, width, height);
 
             if (mBitmap == null) {
-                mBitmap = Bitmap.createBitmap(height, width,
-                        Bitmap.Config.ARGB_8888);
+                mBitmap = Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888);
                 myCameraPreview.setImageBitmap(mBitmap);
             }
 
@@ -174,10 +165,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    /* This class is run on another thread in the background, and when it's done with the decoding,
-     * onPostExectue is called to set the new pixel array to the image we have.
-     * In doInBackground you can change the values of the RGB pixel array to correspond to your
-     * preferred colors. */
     private class ProcessPreviewDataTask extends AsyncTask<byte[], Void, Boolean> {
 
 
@@ -190,10 +177,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             int tempWidth = 480;
             int tempHeight = 640;
             // Here we decode the image to a RGB array.
-
             pixels = decodeYUV420SP(data, tempWidth, tempHeight);
-            //Log.w("length", String.valueOf(pixels[100]));
-
             mCamera.addCallbackBuffer(data);
             mProcessInProgress = false;
 
@@ -207,47 +191,54 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             counter++;
             myCameraPreview.invalidate();
             mBitmap.setPixels(pixels, 0, 480, 0, 0, 480, 640);
-            myCameraPreview.setImageBitmap(mBitmap);
+
+            seriesR.appendData(new DataPoint(counter, rgbSum[0]), true, 100, false);
+            seriesG.appendData(new DataPoint(counter, rgbSum[1]), true, 100, false);
+            seriesB.appendData(new DataPoint(counter, rgbSum[2]), true, 100, false);
+
+            rgbSum[0] = 0;
+            rgbSum[1] = 0;
+            rgbSum[2] = 0;
 
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            //myCameraPreview.setImageBitmap(scope(mBitmap, newScopePos[0], newScopePos[1]));
 
 
 
-                for (int x = 0; x < 100; x++) {
-                    for (int y = 0; y < 100; y++) {
-                        float[] RGB = mBitmap.getColor(x, y).getComponents();
-                        rgbSum[0] += RGB[0];
-                        rgbSum[1] += RGB[1];
-                        rgbSum[2] += RGB[2];
-                    }
-                }
-
-                seriesR.appendData(new DataPoint(counter, rgbSum[0]), true, 50, false);
-                seriesG.appendData(new DataPoint(counter, rgbSum[1]), true, 50, false);
-                seriesB.appendData(new DataPoint(counter, rgbSum[2]), true, 50, false);
-
-                rgbSum[0] =0;
-                rgbSum[1] =0;
-                rgbSum[2] =0;
+            if( counter % 100 == 0){
+                oldBitmap = mBitmap;
             }
 
-            if ((counter % 200) == 0) {
+            myCameraPreview.setImageBitmap(scope(mBitmap, mBitmap.getWidth()/2,mBitmap.getHeight()/2));
 
-                graph.addSeries(seriesR);
-                graph.addSeries(seriesG);
-                graph.addSeries(seriesB);
-
-
-            }
         }
 
     }
 
 
-    /*Decoding and rotating methods from github
-     * This method rotates the NV21 image (standard image that comes from the preview)
-     * since this is a byte array, it must be switched correctly to match the pixels*/
+    public Bitmap scope(Bitmap bm, int centerX, int centerY) {
+        int lineThickness = 5;
+        int radius = 80; // radius of the circle
+        for (int x = 0; x < bm.getWidth(); x++) {
+            for (int y = 0; y < bm.getHeight(); y++) {
+                int distance = (int) Math.sqrt((x - centerX) * (x - centerX) + (y - centerY) * (y - centerY));
+                if (distance < radius + lineThickness) {
+                    float[] RGB = new float[3];
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        RGB = bm.getColor(x, y).getComponents();
+                    }
+                    rgbSum[0] += RGB[0];
+                    rgbSum[1] += RGB[1];
+                    rgbSum[2] += RGB[2];
+                    if (distance > radius - lineThickness) {
+                        bm.setPixel(x, y, Color.rgb(250, 0, 0));
+                    }
+                }
+            }
+        }
+        return bm;
+    }
+
     private byte[] rotateYUV420Degree90(byte[] data, int imageWidth, int imageHeight) {
         byte[] yuv = new byte[imageWidth * imageHeight * 3 / 2];
         // Rotate the Y luma
@@ -270,6 +261,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
         return yuv;
     }
+
 
     /* Decodes the image from the NV21 format into an RGB-array with integers.
      * Since the NV21 array is made out of bytes, and one pixel is made out of 1.5 bytes, this is
