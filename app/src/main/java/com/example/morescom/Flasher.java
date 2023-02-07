@@ -7,22 +7,28 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-public class  Flasher{
+public class Flasher {
     private CameraManager CM;
     private String cID;
 
     private int dotDealy;
-    private int dashDelay = dotDealy * 3;
-    private int wordEndDelay = dotDealy * 6;
 
-    public Flasher(CameraManager CM, String cID, int unitTime){
+    private int space;
+    private int dashDelay;
+    private int wordEndDelay;
+
+    public Flasher(CameraManager CM, String cID, int unitTime) {
 
         this.dotDealy = unitTime;
+        this.space = unitTime;
+        this.dashDelay = unitTime * 3;
+        wordEndDelay = unitTime * 7;
+
         this.CM = CM;
         this.cID = cID;
     }
-    public void transmit(List<String> BlinkArray) throws InterruptedException {
 
+    public void transmit(List<String> BlinkArray) throws InterruptedException {
         for (String word : BlinkArray
         ) {
             for (int i = 0; i < word.length(); i++) {
@@ -43,30 +49,25 @@ public class  Flasher{
         }
     }
 
-    private void flashLightOn(){
-        try{
+    private void flashLightOn() {
+        try {
             assert CM != null;
             String cameraId = CM.getCameraIdList()[0];
             CM.setTorchMode(cameraId, true);
-        }
-        catch(CameraAccessException e){
+        } catch (CameraAccessException e) {
             Log.e("Camera Problem", "Cannot turn on camera flashlight");
         }
     }
 
-    private void flashLightOff(){
-        try{
+    private void flashLightOff() {
+        try {
             assert CM != null;
             String cameraId = CM.getCameraIdList()[0];
             CM.setTorchMode(cameraId, false);
-        }
-        catch(CameraAccessException e){
+        } catch (CameraAccessException e) {
             Log.e("Camera Problem", "Cannot turn off camera flashlight");
         }
     }
-
-
-
 
 
 }

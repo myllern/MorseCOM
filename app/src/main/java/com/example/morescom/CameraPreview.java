@@ -26,19 +26,12 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 import static android.content.ContentValues.TAG;
 
 
-/**
- * A basic Camera preview class
- */
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback {
 
     float[] rgbSum = new float[3];
     int counter;
     GraphView graph;
     LineGraphSeries<DataPoint> seriesG, seriesB, seriesR;
-    long mesureCounter;
-    Bitmap oldBitmap;
-
-    MovingAvrageFilter MAF;
 
     private SurfaceHolder mHolder;
     private Camera mCamera;
@@ -49,9 +42,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private int[] pixels = null;
     public int width = 640, height = 480;
     private Camera.Parameters params;
-
-
-    // Graph X-axis counter initialization so that the graph starts at zero
 
 
     public CameraPreview(Context context, Camera camera, ImageView mCameraPreview, LinearLayout layout, GraphView graph) {
@@ -93,6 +83,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         vp.setXAxisBoundsManual(true);
         vp.setMinX(0);
         vp.setMaxX(300);
+
 
 
     }
@@ -191,11 +182,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             counter++;
             myCameraPreview.invalidate();
             mBitmap.setPixels(pixels, 0, 480, 0, 0, 480, 640);
-            myCameraPreview.setImageBitmap(scope(mBitmap, mBitmap.getWidth()/2,mBitmap.getHeight()/2));
+            myCameraPreview.setImageBitmap(scope(mBitmap, mBitmap.getWidth() / 2, mBitmap.getHeight() / 2));
 
-            seriesR.appendData(new DataPoint(counter, rgbSum[0]), true, 100, false);
-                seriesG.appendData(new DataPoint(counter, rgbSum[1]), true, 100, false);
-                seriesB.appendData(new DataPoint(counter, rgbSum[2]), true, 100, false);
+            seriesR.appendData(new DataPoint(counter, rgbSum[0] + rgbSum[1] + rgbSum[ 2]), true, 100, false);
+            //seriesG.appendData(new DataPoint(counter, ), true, 100, false);
+           // seriesB.appendData(new DataPoint(counter, rgbSum[2]), true, 100, false);
+
             rgbSum[0] = 0;
             rgbSum[1] = 0;
             rgbSum[2] = 0;
