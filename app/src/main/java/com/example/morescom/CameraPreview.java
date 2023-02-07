@@ -191,25 +191,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             counter++;
             myCameraPreview.invalidate();
             mBitmap.setPixels(pixels, 0, 480, 0, 0, 480, 640);
+            myCameraPreview.setImageBitmap(scope(mBitmap, mBitmap.getWidth()/2,mBitmap.getHeight()/2));
 
             seriesR.appendData(new DataPoint(counter, rgbSum[0]), true, 100, false);
-            seriesG.appendData(new DataPoint(counter, rgbSum[1]), true, 100, false);
-            seriesB.appendData(new DataPoint(counter, rgbSum[2]), true, 100, false);
-
+                seriesG.appendData(new DataPoint(counter, rgbSum[1]), true, 100, false);
+                seriesB.appendData(new DataPoint(counter, rgbSum[2]), true, 100, false);
             rgbSum[0] = 0;
             rgbSum[1] = 0;
             rgbSum[2] = 0;
 
-
-            //myCameraPreview.setImageBitmap(scope(mBitmap, newScopePos[0], newScopePos[1]));
-
-
-
-            if( counter % 100 == 0){
-                oldBitmap = mBitmap;
-            }
-
-            myCameraPreview.setImageBitmap(scope(mBitmap, mBitmap.getWidth()/2,mBitmap.getHeight()/2));
 
         }
 
