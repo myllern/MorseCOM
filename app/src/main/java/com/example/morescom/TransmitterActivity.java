@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 public class TransmitterActivity extends AppCompatActivity {
     int unitTime = 300;
@@ -50,6 +52,8 @@ public class TransmitterActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         flasher = new Flasher(cameraManager,cameraId, unitTime);
+
+
     }
 
     public void getMessageInput() throws InterruptedException {
@@ -71,3 +75,15 @@ public class TransmitterActivity extends AppCompatActivity {
         flasher.transmit(encoder.encode(messageBox.getText().toString()));
     }
 }
+
+
+/*
+dotF = [1 1 0 0 0 0 0 0];
+dashF =[1 1 1 1 1 1 0 0];
+dot_data = [15 15 10 10 10 10 10 10 ];
+dash_data = [15 15 15 15  15 15 10 10];
+coff_dot_fdot = max(xcorr(dot_data,dotF,10,'normalized'))
+coff_dot_fdash =  max(xcorr(dot_data,dashF,10,'normalized'))
+coff_dash_fdot  = max(xcorr(dash_data,dotF,10,'normalized'))
+coff_dash_fdash = max(xcorr(dash_data,dashF,10,'normalized'))
+ */

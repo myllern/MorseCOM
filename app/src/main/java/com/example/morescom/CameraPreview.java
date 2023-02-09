@@ -3,10 +3,10 @@ package com.example.morescom;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
+
 import android.graphics.Color;
 import android.graphics.ImageFormat;
-import android.graphics.Paint;
+
 import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.util.Log;
@@ -16,7 +16,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.Viewport;
@@ -33,6 +32,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     GraphView graph;
     LineGraphSeries<DataPoint> seriesG, seriesB, seriesR;
 
+    private float flashThreshold = 1F;
     private SurfaceHolder mHolder;
     private Camera mCamera;
     private int imageFormat;
@@ -43,6 +43,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     public int width = 640, height = 480;
     private Camera.Parameters params;
 
+    private MovingAverageFilter MF;
+    private float[] savedDataPoints;
+
 
     public CameraPreview(Context context, Camera camera, ImageView mCameraPreview, LinearLayout layout, GraphView graph) {
         super(context);
@@ -50,6 +53,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = camera;
         params = mCamera.getParameters();
         imageFormat = params.getPreviewFormat();
+        MF = new MovingAverageFilter(3);
         //Make sure that the preview size actually exists, and set it to our values
         for (Camera.Size previewSize : mCamera.getParameters().getSupportedPreviewSizes()) {
             if (previewSize.width == 640 && previewSize.height == 480) {
@@ -84,6 +88,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         vp.setMinX(0);
         vp.setMaxX(300);
 
+        savedDataPoints = new float[5];
 
 
     }
@@ -179,22 +184,41 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         @Override
 
         protected void onPostExecute(Boolean result) {
-            counter++;
-            myCameraPreview.invalidate();
-            mBitmap.setPixels(pixels, 0, 480, 0, 0, 480, 640);
-            myCameraPreview.setImageBitmap(scope(mBitmap, mBitmap.getWidth() / 2, mBitmap.getHeight() / 2));
+                counter++;
+                myCameraPreview.invalidate();
+                mBitmap.setPixels(pixels, 0, 480, 0, 0, 480, 640);
+                myCameraPreview.setImageBitmap(scope(mBitmap, mBitmap.getWidth() / 2, mBitmap.getHeight() / 2));
+                float RGBsum = rgbSum[0] + rgbSum[1] + rgbSum[2];
+                MF.pushValue(RGBsum);
 
-            seriesR.appendData(new DataPoint(counter, rgbSum[0] + rgbSum[1] + rgbSum[ 2]), true, 100, false);
-            //seriesG.appendData(new DataPoint(counter, ), true, 100, false);
-           // seriesB.appendData(new DataPoint(counter, rgbSum[2]), true, 100, false);
+                detectedFlash(RGBsum);
 
-            rgbSum[0] = 0;
-            rgbSum[1] = 0;
-            rgbSum[2] = 0;
+
+                seriesR.appendData(new DataPoint(counter, MF.getValue()), true, 250, false);
+                //seriesG.appendData(new DataPoint(counter, ), true, 100, false);
+                // seriesB.appendData(new DataPoint(counter, rgbSum[2]), true, 100, false);
+                Log.d("ok", String.valueOf(MF.getValue()/2));
+                rgbSum[0] = 0;
+                rgbSum[1] = 0;
+                rgbSum[2] = 0;
 
 
         }
 
+    }
+
+    public boolean detectedFlash(float in) {
+
+        float avg = MF.getValue(); // Avg from datapoints
+        //Log.d("avg",String.valueOf(in/avg));
+        if (in / avg > 1.15) {
+            //Log.d("avg", String.valueOf(in / avg));
+            //Log.d("avg", "FLAAAAASH");
+        }
+        //Log.d("avg",String.valueOf(in/avg));
+
+
+        return true;
     }
 
 
