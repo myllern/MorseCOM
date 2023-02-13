@@ -54,6 +54,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private Camera.Parameters params;
     private MovingAverageFilter MF;
     private ArrayList symbols;
+    private ArrayList samples;
+    private NormCrossCorr normCrossCorr;
+    private float RGBvalue;
 
     public CameraPreview(Context context, Camera camera, ImageView mCameraPreview, LinearLayout layout, GraphView graph) {
         super(context);
@@ -61,7 +64,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = camera;
         params = mCamera.getParameters();
         imageFormat = params.getPreviewFormat();
-        MF = new MovingAverageFilter(150);
+        MF = new MovingAverageFilter(100);
         //Make sure that the preview size actually exists, and set it to our values
         for (Camera.Size previewSize : mCamera.getParameters().getSupportedPreviewSizes()) {
             if (previewSize.width == 640 && previewSize.height == 480) {
@@ -86,34 +89,55 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         vp.setMinX(0);
         vp.setMaxX(300);
         symbols = new ArrayList();
+        samples = new ArrayList();
+
+        double Y[] = {1,1,-1,-1,1,1,1,1,1,1,-1,-1,1,1}; // filter
+        double X[] = {-120,-130,-110,-100,-120,-150,-120,-130,100,110,-120,-130,140,120,110,100,150,120,-140,-120,110,160,-140,-120,-110,-100,-110,-100,-130,-120,-110};
+        int n = X.length;
+
+        System.out.println(new NormCrossCorr(X,Y,n));
 
 
-        startSample();
+        System.out.println();
+        System.out.println();
+        RGBvalue = 0;
+
+
+
+
+
+        //findStart();
+
+
+        //startSample();
 
 
 
     }
 
+
+    public void findStart(){
+
+      //  System.out.println("Corr value for -1-1-1-1 -> 0 " + normCrossCorr.calculate(new double[]{-1,-1,-1,-1})[1]);
+     //   System.out.println("Corr value for -1-1-1-1 -> 1 " + normCrossCorr.calculate(new double[]{-1,-1,-1,-1})[1]);
+
+    }
     public void startSample() {
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                ArrayList samples = new ArrayList();
                 SampleCounter++;
-                samples.add(rgbSum[0] + rgbSum[1] + rgbSum[2]);
-                Log.d("HE", String.valueOf(SampleCounter));
+                samples.add(RGBvalue);
                 if (SampleCounter == 15) {
                     symbols.add(samples);
-                    Log.d("HE", "filled");
                     SampleCounter=0;
+                    samples.clear();
                 }
             }
         };
         executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
-
-
     }
 
 
@@ -215,13 +239,17 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             counter++;
             myCameraPreview.invalidate();
             mBitmap.setPixels(pixels, 0, 480, 0, 0, 480, 640);
+
             myCameraPreview.setImageBitmap(scope(mBitmap, mBitmap.getWidth() / 2, mBitmap.getHeight() / 2));
             float RGBsum = rgbSum[0] + rgbSum[1] + rgbSum[2];
             MF.pushValue(RGBsum);
 
             //detectedFlash(RGBsum - MF.getValue());
+            RGBvalue = RGBsum - MF.getValue();
 
-            seriesR.appendData(new DataPoint(counter, RGBsum - MF.getValue()), true, 250, false);
+            seriesR.appendData(new DataPoint(counter, RGBvalue), true, 250, false);
+
+
 
             rgbSum[0] = 0;
             rgbSum[1] = 0;

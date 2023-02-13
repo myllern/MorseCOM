@@ -1,59 +1,69 @@
 package com.example.morescom;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
+import java.math.*;
 import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 public class NormCrossCorr {
 
-    private double[] template_dot;
-    private double[] template_dash;
-    private double[] template_intSymbolSpace;
+    public NormCrossCorr(double[] a, double[] b, int maxlag) {
+        double[] corr_coff = new double[2 * maxlag + 1];
+        Arrays.fill(corr_coff, 0);
+
+        double a_square = 0;
+        double b_square = 0;
 
 
-    public NormCrossCorr(double[] template_dot, double[] template_dash, double[] template_intSymbolSpace) {
-        this.template_dot = template_dot;
-        this.template_dash = template_dash;
-        this.template_intSymbolSpace = template_intSymbolSpace;
-
-    }
-
-
-    public ArrayList[] calculate(double[] data) {
-        ArrayList[] arr = new ArrayList[2];
-        arr[0] = (DoubleStream.of(getCoefficientOfFilter(data,template_dot)).boxed().collect(Collectors.toCollection(ArrayList::new)));
-        arr[1] = (DoubleStream.of(getCoefficientOfFilter(data,template_dash)).boxed().collect(Collectors.toCollection(ArrayList::new)));
-        arr[2] = (DoubleStream.of(getCoefficientOfFilter(data,template_intSymbolSpace)).boxed().collect(Collectors.toCollection(ArrayList::new)));
-
-        return arr;
-    }
-
-    public double getCoefficientOfFilter(double[] data, double[] template) {
-        double data_mean = mean(data);
-        double data_sdv = standardDeviation(data, data_mean);
-        double template_mean = mean(template);
-        double template_std = standardDeviation(template, template_mean);
-        double numerator = 0.0;
-        for (int i = 0; i < data.length; i++) {
-            numerator += (data[i] - data_mean) * (template[i] - template_mean);
+        for (int n = 0; n < a.length; n++) {
+            a_square += a[n]*a[n];
         }
-        return numerator / ((data_sdv) * template_std * data.length);
-    }
-
-    private static double mean(double[] data) {
-        return Arrays.stream(data).sum() / data.length;
-    }
-
-    private static double standardDeviation(double[] data, double mean) {
-        double sum = 0.0;
-        for (double d : data) {
-            sum += Math.pow(d - mean, 2);
+        for (int n = 0; n < b.length; n++) {
+            b_square += b[n]*b[n];
         }
-        return Math.sqrt(sum / (data.length - 1));
+
+
+
+        for (int lag = b.length - 1, idx = maxlag - b.length + 1;
+             lag > -a.length; lag--, idx++) {
+            if (idx < 0)
+                continue;
+
+            if (idx >= corr_coff.length)
+                break;
+
+            int start = 0;
+
+            if (lag < 0) {
+
+                start = -lag;
+            }
+
+            int end = a.length - 1;
+
+            if (end > b.length - lag - 1) {
+                end = b.length - lag - 1;
+
+            }
+
+
+            for (int n = start; n <= end; n++) {
+
+                corr_coff[idx] += a[n] * b[lag + n];
+            }
+            for (int n = start; n <= end; n++) {
+
+                corr_coff[idx] += a[n] * b[lag + n];
+            }
+
+            corr_coff[idx] = corr_coff[idx]/Math.sqrt(a_square*b_square);
+            System.out.println( corr_coff[idx]);
+        }
+
     }
 }
+
+
+
+
 
 
 

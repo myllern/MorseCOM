@@ -51,20 +51,6 @@ public class TransmitterActivity extends AppCompatActivity {
         double [] intSymbolSpaceF = {-1,-1,-1,-1,-1,-1};
         double [] dot_data = {15,15,-15,-15,-15,-15,-15,-15};
         double [] dash_data = {15,15,15,15,15,15,-15,-15};
-        NormCrossCorr ncc = new NormCrossCorr(dotF,dashF,intSymbolSpaceF);
-
-        Log.d("-----","------");
-        Log.d("-----","------");
-        Log.d("DOT DATA!!!!  DOT FILTER",String.valueOf(ncc.calculate(dot_data)[0]));
-        Log.d("DOT DATA!!!! DASH FILTER",String.valueOf(ncc.calculate(dot_data)[1]));
-        Log.d("-----","------");
-        Log.d("-----","------");
-        Log.d("DASH DATA!!!! DOT FILTER",String.valueOf(ncc.calculate(dash_data)[0]));
-        Log.d("DASH DATA!!!! DASH FILTER",String.valueOf(ncc.calculate(dash_data)[1]));
-        Log.d("-----","------");
-        Log.d("-----","------");
-
-
 
 
 
