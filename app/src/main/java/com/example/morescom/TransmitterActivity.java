@@ -10,13 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 
 public class TransmitterActivity extends AppCompatActivity {
     int unitTime = 300;
@@ -52,6 +46,28 @@ public class TransmitterActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         flasher = new Flasher(cameraManager,cameraId, unitTime);
+        double [] dotF = {1,1,-1,-1};
+        double [] dashF ={1,1,1,1,1,1,-1,-1};
+        double [] intSymbolSpaceF = {-1,-1,-1,-1,-1,-1};
+        double [] dot_data = {15,15,-15,-15,-15,-15,-15,-15};
+        double [] dash_data = {15,15,15,15,15,15,-15,-15};
+        NormCrossCorr ncc = new NormCrossCorr(dotF,dashF,intSymbolSpaceF);
+
+        Log.d("-----","------");
+        Log.d("-----","------");
+        Log.d("DOT DATA!!!!  DOT FILTER",String.valueOf(ncc.calculate(dot_data)[0]));
+        Log.d("DOT DATA!!!! DASH FILTER",String.valueOf(ncc.calculate(dot_data)[1]));
+        Log.d("-----","------");
+        Log.d("-----","------");
+        Log.d("DASH DATA!!!! DOT FILTER",String.valueOf(ncc.calculate(dash_data)[0]));
+        Log.d("DASH DATA!!!! DASH FILTER",String.valueOf(ncc.calculate(dash_data)[1]));
+        Log.d("-----","------");
+        Log.d("-----","------");
+
+
+
+
+
 
 
     }
