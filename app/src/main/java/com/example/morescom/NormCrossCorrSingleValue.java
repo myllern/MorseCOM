@@ -30,8 +30,6 @@ public class NormCrossCorrSingleValue {
             corr_coff += inputData[n] * startSeq[n];
         }
         corr_coff = corr_coff / Math.sqrt(inputData_square * startSeq_square);
-        System.out.println(" Corr nr: " + corr_coff);
-
         return corr_coff;
 
     }

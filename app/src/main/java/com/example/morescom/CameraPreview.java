@@ -71,7 +71,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = camera;
         params = mCamera.getParameters();
         imageFormat = params.getPreviewFormat();
-        MF = new MovingAverageFilter(100);
+        MF = new MovingAverageFilter(20);
         //Make sure that the preview size actually exists, and set it to our values
         for (Camera.Size previewSize : mCamera.getParameters().getSupportedPreviewSizes()) {
             if (previewSize.width == 640 && previewSize.height == 480) {
@@ -113,26 +113,19 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                startSamples[StartSampleCounter] = RGBvalue;
-                StartSampleCounter++;
-                System.out.println(StartSampleCounter);
-                if (StartSampleCounter == 240) {
-                    StartSampleCounter = 0;
-                    double corrValue = normCrossCorrSingleValue.calcCoff(startSamples);
-                    System.out.println(corrValue);
-
-
-                    if(corrValue > 0.9){
-                        startSeqFound = true;
-                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        t.cancel(false);
-                    }
-
-
+                for (int i = startSamples.length - 1; i > 0; i--) {
+                    startSamples[i] = startSamples[i - 1];
                 }
+                startSamples[0] = RGBvalue;
+                StartSampleCounter++;
+                double corrValue = normCrossCorrSingleValue.calcCoff(startSamples);
+                if (corrValue > 0.5) {
+                    startSeqFound = true;
+                    System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    startSample();
+                    t.cancel(false);
+                }
+
             }
         };
         t = executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
@@ -145,6 +138,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Runnable task = new Runnable() {
             @Override
             public void run() {
+                System.out.println("Sampleing!");
                 SampleCounter++;
                 samples.add(RGBvalue);
                 if (SampleCounter == 15) {
