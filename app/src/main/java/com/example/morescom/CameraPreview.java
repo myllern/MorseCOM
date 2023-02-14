@@ -58,11 +58,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private MovingAverageFilter MF;
     private ArrayList symbols;
     private ArrayList samples;
-    private double[] startSamples;
+    private float[] startSamples;
     private NormCrossCorrSingleValue normCrossCorrSingleValue;
     private float RGBvalue;
 
-    double[] startSeq = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; // filter
+    float[] startSeq = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; // filter
 
 
     public CameraPreview(Context context, Camera camera, ImageView mCameraPreview, LinearLayout layout, GraphView graph) {
@@ -95,7 +95,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         vp.setMaxX(300);
         symbols = new ArrayList();
         samples = new ArrayList();
-        startSamples = new double[240];
+        startSamples = new float[240];
         RGBvalue = 0;
 
         normCrossCorrSingleValue = new NormCrossCorrSingleValue(startSeq);
@@ -113,23 +113,22 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                StartSampleCounter++;
                 startSamples[StartSampleCounter] = RGBvalue;
-                //System.out.println(StartSampleCounter);
+                StartSampleCounter++;
+                System.out.println(StartSampleCounter);
                 if (StartSampleCounter == 240) {
-
                     StartSampleCounter = 0;
-                    double corrValue = normCrossCorrSingleValue.calcCoff(startSeq);
+                    double corrValue = normCrossCorrSingleValue.calcCoff(startSamples);
                     System.out.println(corrValue);
 
 
-                    if(corrValue > 0.6){
+                    if(corrValue > 0.9){
                         startSeqFound = true;
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
                         t.cancel(false);
-                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
                     }
 
 

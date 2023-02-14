@@ -5,9 +5,9 @@ public class NormCrossCorrSingleValue {
     double corr_coff = 0;
     double startSeq_square;
     double inputData_square = 0;
-    double[] startSeq;
+    float[] startSeq;
 
-    public NormCrossCorrSingleValue(double[] startSeq) {
+    public NormCrossCorrSingleValue(float[] startSeq) {
 
         this.startSeq = startSeq;
 
@@ -16,9 +16,9 @@ public class NormCrossCorrSingleValue {
         }
     }
 
-    public double calcCoff( double [] inputData) {
+    public double calcCoff( float [] inputData) {
 
-        corr_coff=0;
+        corr_coff= 0;
         inputData_square = 0;
 
         for (int n = 0; n < inputData.length; n++) {
