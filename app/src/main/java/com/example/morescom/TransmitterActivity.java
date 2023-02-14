@@ -46,11 +46,6 @@ public class TransmitterActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         flasher = new Flasher(cameraManager,cameraId, unitTime);
-        double [] dotF = {1,1,-1,-1};
-        double [] dashF ={1,1,1,1,1,1,-1,-1};
-        double [] intSymbolSpaceF = {-1,-1,-1,-1,-1,-1};
-        double [] dot_data = {15,15,-15,-15,-15,-15,-15,-15};
-        double [] dash_data = {15,15,15,15,15,15,-15,-15};
 
 
 

@@ -20,8 +20,6 @@ public class NormCrossCorr {
             b_square += b[n]*b[n];
         }
 
-
-
         for (int lag = b.length - 1, idx = maxlag - b.length + 1;
              lag > -a.length; lag--, idx++) {
             if (idx < 0)
@@ -36,26 +34,19 @@ public class NormCrossCorr {
 
                 start = -lag;
             }
-
             int end = a.length - 1;
 
             if (end > b.length - lag - 1) {
                 end = b.length - lag - 1;
 
             }
-
-
             for (int n = start; n <= end; n++) {
 
                 corr_coff[idx] += a[n] * b[lag + n];
             }
-            for (int n = start; n <= end; n++) {
-
-                corr_coff[idx] += a[n] * b[lag + n];
-            }
-
             corr_coff[idx] = corr_coff[idx]/Math.sqrt(a_square*b_square);
-            System.out.println( corr_coff[idx]);
+            System.out.println(corr_coff[idx]);
+
         }
 
     }

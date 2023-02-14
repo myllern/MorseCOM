@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import java.io.IOException;
 
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -33,14 +34,15 @@ import static android.content.ContentValues.TAG;
 
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback {
-
+    boolean startSeqFound = false;
+    static ScheduledFuture<?> t;
     float[] rgbSum = new float[3];
     int counter;
     GraphView graph;
     LineGraphSeries<DataPoint> seriesR;
 
     static int SampleCounter = 0;
-    static int SymbolCounter = 0;
+    static int StartSampleCounter = 0;
 
     private float flashThreshold = 1F;
     private SurfaceHolder mHolder;
@@ -48,6 +50,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private int imageFormat;
     private boolean mProcessInProgress = false;
     private Bitmap mBitmap = null;
+    double Y[];
     private ImageView myCameraPreview;
     private int[] pixels = null;
     public int width = 640, height = 480;
@@ -55,8 +58,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private MovingAverageFilter MF;
     private ArrayList symbols;
     private ArrayList samples;
-    private NormCrossCorr normCrossCorr;
+    private double[] startSamples;
+    private NormCrossCorrSingleValue normCrossCorrSingleValue;
     private float RGBvalue;
+
+    double[] startSeq = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; // filter
+
 
     public CameraPreview(Context context, Camera camera, ImageView mCameraPreview, LinearLayout layout, GraphView graph) {
         super(context);
@@ -79,49 +86,60 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         layout.addView(myCameraPreview);
-
         seriesR = new LineGraphSeries<>(new DataPoint[]{new DataPoint(0, 0),});
         seriesR.setColor(Color.RED);
         graph.addSeries(seriesR);
-
         Viewport vp = graph.getViewport();
         vp.setXAxisBoundsManual(true);
         vp.setMinX(0);
         vp.setMaxX(300);
         symbols = new ArrayList();
         samples = new ArrayList();
-
-        double Y[] = {1,1,-1,-1,1,1,1,1,1,1,-1,-1,1,1}; // filter
-        double X[] = {-120,-130,-110,-100,-120,-150,-120,-130,100,110,-120,-130,140,120,110,100,150,120,-140,-120,110,160,-140,-120,-110,-100,-110,-100,-130,-120,-110};
-        int n = X.length;
-
-        System.out.println(new NormCrossCorr(X,Y,n));
-
-
-        System.out.println();
-        System.out.println();
+        startSamples = new double[240];
         RGBvalue = 0;
 
+        normCrossCorrSingleValue = new NormCrossCorrSingleValue(startSeq);
 
 
-
-
-        //findStart();
-
+        findStart();
 
         //startSample();
 
 
+    }
 
+    public void findStart() {
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                StartSampleCounter++;
+                startSamples[StartSampleCounter] = RGBvalue;
+                //System.out.println(StartSampleCounter);
+                if (StartSampleCounter == 240) {
+
+                    StartSampleCounter = 0;
+                    double corrValue = normCrossCorrSingleValue.calcCoff(startSeq);
+                    System.out.println(corrValue);
+
+
+                    if(corrValue > 0.6){
+                        startSeqFound = true;
+                        t.cancel(false);
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    }
+
+
+                }
+            }
+        };
+        t = executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
     }
 
 
-    public void findStart(){
-
-      //  System.out.println("Corr value for -1-1-1-1 -> 0 " + normCrossCorr.calculate(new double[]{-1,-1,-1,-1})[1]);
-     //   System.out.println("Corr value for -1-1-1-1 -> 1 " + normCrossCorr.calculate(new double[]{-1,-1,-1,-1})[1]);
-
-    }
     public void startSample() {
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
@@ -132,7 +150,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 samples.add(RGBvalue);
                 if (SampleCounter == 15) {
                     symbols.add(samples);
-                    SampleCounter=0;
+                    SampleCounter = 0;
                     samples.clear();
                 }
             }
@@ -248,7 +266,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             RGBvalue = RGBsum - MF.getValue();
 
             seriesR.appendData(new DataPoint(counter, RGBvalue), true, 250, false);
-
 
 
             rgbSum[0] = 0;
