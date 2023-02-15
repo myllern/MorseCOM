@@ -5,11 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Encoder {
-
-    public Encoder() {
-
-    }
-
     public List<String> encode(String sentence) {
         ArrayList<String> encodedWords = new ArrayList<String>();
         for (String words : separateSentence(sentence)
@@ -35,17 +30,17 @@ public class Encoder {
 
     private String encodeWord(char c) {
         switch (c) {
-            //TODO ADD SPACE AND DOT!
+
             case 'A':
-                return ".-";
+                return ".-"; // 101110
             case 'B':
-                return "-...";
+                return "-..."; // 1110101010
             case 'C':
-                return "-.-.";
+                return "-.-."; // 111010111010
             case 'D':
-                return "-..";
+                return "-.."; // 11101010
             case 'E':
-                return ".";
+                return ".";  // 10
             case 'F':
                 return "..-.";
             case 'G':

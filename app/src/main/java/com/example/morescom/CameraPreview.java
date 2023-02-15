@@ -9,7 +9,6 @@ import android.graphics.ImageFormat;
 
 import android.hardware.Camera;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -19,11 +18,11 @@ import android.widget.LinearLayout;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.Viewport;
@@ -34,15 +33,21 @@ import static android.content.ContentValues.TAG;
 
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback {
+
+    ArrayList words;
     boolean startSeqFound = false;
-    static ScheduledFuture<?> t;
+    static ScheduledFuture<?> t1;
+    static ScheduledFuture<?> t2;
     float[] rgbSum = new float[3];
     int counter;
     GraphView graph;
+    Decoder decoder;
     LineGraphSeries<DataPoint> seriesR;
 
     static int SampleCounter = 0;
+
     static int StartSampleCounter = 0;
+    int nrOfZeros = 0;
 
     private float flashThreshold = 1F;
     private SurfaceHolder mHolder;
@@ -57,10 +62,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private Camera.Parameters params;
     private MovingAverageFilter MF;
     private ArrayList symbols;
-    private ArrayList samples;
+    private float[] samples;
     private float[] startSamples;
     private NormCrossCorrSingleValue normCrossCorrSingleValue;
     private float RGBvalue;
+    StringBuilder sb;
 
     float[] startSeq = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; // filter
 
@@ -71,7 +77,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = camera;
         params = mCamera.getParameters();
         imageFormat = params.getPreviewFormat();
-        MF = new MovingAverageFilter(20);
+        MF = new MovingAverageFilter(50);
         //Make sure that the preview size actually exists, and set it to our values
         for (Camera.Size previewSize : mCamera.getParameters().getSupportedPreviewSizes()) {
             if (previewSize.width == 640 && previewSize.height == 480) {
@@ -79,6 +85,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 break;
             }
         }
+        decoder = new Decoder();
+        sb = new StringBuilder();
         mCamera.setParameters(params);
         myCameraPreview = mCameraPreview;
         mHolder = getHolder();
@@ -94,16 +102,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         vp.setMinX(0);
         vp.setMaxX(300);
         symbols = new ArrayList();
-        samples = new ArrayList();
+        samples = new float[15];
         startSamples = new float[240];
+        words = new ArrayList();
         RGBvalue = 0;
-
         normCrossCorrSingleValue = new NormCrossCorrSingleValue(startSeq);
-
-
         findStart();
-
-        //startSample();
 
 
     }
@@ -119,16 +123,17 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 startSamples[0] = RGBvalue;
                 StartSampleCounter++;
                 double corrValue = normCrossCorrSingleValue.calcCoff(startSamples);
-                if (corrValue > 0.5) {
+                if (corrValue > 0.75) {
                     startSeqFound = true;
                     System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                    System.out.println(System.currentTimeMillis());
                     startSample();
-                    t.cancel(false);
+                    t1.cancel(false);
                 }
 
             }
         };
-        t = executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
+        t1 = executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
     }
 
 
@@ -138,17 +143,48 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                System.out.println("Sampleing!");
+                samples[SampleCounter] = RGBvalue;
                 SampleCounter++;
-                samples.add(RGBvalue);
                 if (SampleCounter == 15) {
-                    symbols.add(samples);
+                    int dec = makeDecision(samples);
+                    System.out.println(dec);
+                    //addSymbol(dec);
                     SampleCounter = 0;
-                    samples.clear();
                 }
             }
         };
-        executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
+        t2 = executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
+    }
+
+    public void addSymbol(int bit) {
+        if (bit == 0) {
+            nrOfZeros++;
+        } else {
+            nrOfZeros = 0;
+        }
+        if (nrOfZeros == 8) {
+            System.out.println(symbols);
+            symbols.clear();
+            nrOfZeros = 0;
+        } else {
+            symbols.add(bit);
+        }
+    }
+
+
+    public int makeDecision(float[] sampleData) {
+        float threshold = 0;
+        int nbrOfOnes = 0;
+        for (int i = 0; i < sampleData.length; i++) {
+            if (sampleData[i] < threshold) {
+                continue;
+            }
+            nbrOfOnes++;
+            if (nbrOfOnes > sampleData.length / 2) {
+                return 1;
+            }
+        }
+        return 0;
     }
 
 
