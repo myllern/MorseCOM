@@ -14,6 +14,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.io.IOException;
 
@@ -67,6 +68,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private NormCrossCorrSingleValue normCrossCorrSingleValue;
     private float RGBvalue;
     StringBuilder sb;
+    StringBuilder bitSB;
+    public TextView bit_out_TW;
 
     float[] startSeq = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}; // filter
 
@@ -77,7 +80,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = camera;
         params = mCamera.getParameters();
         imageFormat = params.getPreviewFormat();
-        MF = new MovingAverageFilter(50);
+        MF = new MovingAverageFilter(80);
         //Make sure that the preview size actually exists, and set it to our values
         for (Camera.Size previewSize : mCamera.getParameters().getSupportedPreviewSizes()) {
             if (previewSize.width == 640 && previewSize.height == 480) {
@@ -87,15 +90,18 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
         decoder = new Decoder();
         sb = new StringBuilder();
+        bitSB = new StringBuilder();
         mCamera.setParameters(params);
         myCameraPreview = mCameraPreview;
         mHolder = getHolder();
         mHolder.addCallback(this);
+
         // deprecated setting, but required on Android versions prior to 3.0
         mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         layout.addView(myCameraPreview);
         seriesR = new LineGraphSeries<>(new DataPoint[]{new DataPoint(0, 0),});
         seriesR.setColor(Color.RED);
+
         graph.addSeries(seriesR);
         Viewport vp = graph.getViewport();
         vp.setXAxisBoundsManual(true);
@@ -126,7 +132,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 if (corrValue > 0.75) {
                     startSeqFound = true;
                     System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    System.out.println(System.currentTimeMillis());
                     startSample();
                     t1.cancel(false);
                 }
@@ -148,12 +153,21 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 if (SampleCounter == 15) {
                     int dec = makeDecision(samples);
                     System.out.println(dec);
+                    bit_out_TW.setText("dec");
                     //addSymbol(dec);
                     SampleCounter = 0;
                 }
             }
+
+
+
         };
         t2 = executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
+    }
+
+    private void updateBitTW(int dec) {
+        bitSB.append(dec);
+        bit_out_TW.setText(bitSB.toString());
     }
 
     public void addSymbol(int bit) {
