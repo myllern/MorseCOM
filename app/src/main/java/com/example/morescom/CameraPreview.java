@@ -66,6 +66,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private float[] samples;
     private float[] startSamples;
     private NormCrossCorrSingleValue normCrossCorrSingleValue;
+    private double tempCrossCorrValue;
     private float RGBvalue;
     StringBuilder sb;
     StringBuilder bitSB;
@@ -126,15 +127,28 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 for (int i = startSamples.length - 1; i > 0; i--) {
                     startSamples[i] = startSamples[i - 1];
                 }
+
                 startSamples[0] = RGBvalue;
                 StartSampleCounter++;
                 double corrValue = normCrossCorrSingleValue.calcCoff(startSamples);
-                if (corrValue > 0.75) {
-                    startSeqFound = true;
-                    System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                    startSample();
-                    t1.cancel(false);
+
+                if(corrValue > 0.5) System.out.println("corrval: " + corrValue);
+                if (corrValue > 0.67 ) { // this value can be subjected to change
+                    System.out.println("corrval: " + corrValue + ", compared to ref: " + tempCrossCorrValue);
+                    if(tempCrossCorrValue > corrValue) {
+                        startSeqFound = true;
+                        System.out.println("FOUND IT !!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        try {
+                            Thread.sleep(600); //ugly FIX
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        startSample();
+                        t1.cancel(false);
+                    }
                 }
+
+                tempCrossCorrValue = corrValue;
 
             }
         };
@@ -153,14 +167,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 if (SampleCounter == 15) {
                     int dec = makeDecision(samples);
                     System.out.println(dec);
-                    bit_out_TW.setText("dec");
+                    //bit_out_TW.setText("dec");
                     //addSymbol(dec);
                     SampleCounter = 0;
                 }
             }
-
-
-
         };
         t2 = executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
     }
