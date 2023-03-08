@@ -35,6 +35,7 @@ import static android.content.ContentValues.TAG;
 
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback, Camera.PreviewCallback {
 
+    public ProcessPreviewDataTask ppdt;
     ArrayList words;
     boolean startSeqFound = false;
     static ScheduledFuture<?> t1;
@@ -81,6 +82,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         mCamera = camera;
         params = mCamera.getParameters();
         imageFormat = params.getPreviewFormat();
+        //bit_out_TW = findViewById(R.id.receivedText);
         MF = new MovingAverageFilter(80);
         //Make sure that the preview size actually exists, and set it to our values
         for (Camera.Size previewSize : mCamera.getParameters().getSupportedPreviewSizes()) {
@@ -167,8 +169,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 if (SampleCounter == 15) {
                     int dec = makeDecision(samples);
                     System.out.println(dec);
-                    //bit_out_TW.setText("dec");
-                    //addSymbol(dec);
+                    //updateTextView(String.valueOf(dec));
                     SampleCounter = 0;
                 }
             }
@@ -176,9 +177,9 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         t2 = executor.scheduleAtFixedRate(task, 0, 20, TimeUnit.MILLISECONDS);
     }
 
-    private void updateBitTW(int dec) {
-        bitSB.append(dec);
-        bit_out_TW.setText(bitSB.toString());
+    public void updateTextView(String toThis) {
+        TextView textView = (TextView) findViewById(R.id.receivedText);
+        textView.setText(toThis);
     }
 
     public void addSymbol(int bit) {
@@ -194,6 +195,10 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         } else {
             symbols.add(bit);
         }
+    }
+
+    public ProcessPreviewDataTask getPreviewTask() {
+        return ppdt;
     }
 
 
@@ -276,7 +281,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mProcessInProgress = true;
             mCamera.addCallbackBuffer(bytes);
             // Start our background thread to process images
-            new ProcessPreviewDataTask().execute(bytes);
+            ppdt = new ProcessPreviewDataTask();
+            ppdt.execute(bytes);
 
 
         }
@@ -284,7 +290,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
 
     private class ProcessPreviewDataTask extends AsyncTask<byte[], Void, Boolean> {
-
 
         @Override
         protected Boolean doInBackground(byte[]... datas) {
@@ -306,7 +311,6 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         @Override
 
         protected void onPostExecute(Boolean result) {
-
 
             counter++;
             myCameraPreview.invalidate();

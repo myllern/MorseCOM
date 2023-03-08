@@ -105,6 +105,8 @@ public class Encoder {
                 return "----.";
             case '.':
                 return "------";
+            case '!':
+                return "-.-.-.";
             default:
                 return "";
         }
